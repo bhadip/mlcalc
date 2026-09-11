@@ -69,6 +69,7 @@ export default function App() {
             name: 'models/', type: 'folder', description: 'SQLAlchemy ORM models',
             children: [
               { name: 'user.py', type: 'file', description: 'User model (OAuth, roles, soft-delete)' },
+              { name: 'instrument.py', type: 'file', description: 'Instrument config (symbol, contract_size, tick_value, tick_size)' },
               { name: 'calculation.py', type: 'file', description: 'Saved calculations' },
               { name: 'audit_log.py', type: 'file', description: 'Audit trail entries' },
               { name: 'branding.py', type: 'file', description: 'Configurable branding JSON' },
@@ -79,6 +80,7 @@ export default function App() {
             children: [
               { name: 'auth.py', type: 'file' },
               { name: 'calculator.py', type: 'file' },
+              { name: 'instrument.py', type: 'file', description: 'Instrument CRUD schemas' },
               { name: 'user.py', type: 'file' },
             ]
           },
@@ -87,6 +89,7 @@ export default function App() {
             children: [
               { name: 'auth.py', type: 'file', description: 'OAuth endpoints (Google/MS)' },
               { name: 'calculator.py', type: 'file', description: 'ML% calc endpoints' },
+              { name: 'instruments.py', type: 'file', description: 'Instrument CRUD (admin-managed)' },
               { name: 'ocr.py', type: 'file', description: 'Screenshot upload & OCR' },
               { name: 'admin.py', type: 'file', description: 'Admin-only routes' },
               { name: 'users.py', type: 'file', description: 'User management' },
@@ -111,6 +114,9 @@ export default function App() {
           },
         ]},
         { name: 'alembic/', type: 'folder', description: 'DB migrations' },
+        { name: 'seeds/', type: 'folder', description: 'Initial data', children: [
+          { name: 'instruments.json', type: 'file', description: 'Default instrument configs (contract sizes, tick values)' },
+        ]},
         { name: 'tests/', type: 'folder', description: 'Pytest suite' },
         { name: 'requirements.txt', type: 'file' },
         { name: 'Dockerfile', type: 'file' },
@@ -138,6 +144,11 @@ export default function App() {
                 { name: 'ScreenshotUploader.tsx', type: 'file' },
                 { name: 'OCRResultViewer.tsx', type: 'file' },
               ]},
+              { name: 'Admin/', type: 'folder', description: 'Admin panels', children: [
+                { name: 'InstrumentManager.tsx', type: 'file', description: 'CRUD for instrument configs (contract sizes)' },
+                { name: 'UserManager.tsx', type: 'file' },
+                { name: 'AuditLogViewer.tsx', type: 'file' },
+              ]},
               { name: 'ui/', type: 'folder', description: 'Shared UI primitives' },
               { name: 'layout/', type: 'folder', description: 'Header, Sidebar, Footer' },
             ]
@@ -148,6 +159,7 @@ export default function App() {
               { name: 'useAuth.ts', type: 'file' },
               { name: 'useCalculator.ts', type: 'file' },
               { name: 'useOCR.ts', type: 'file' },
+              { name: 'useInstruments.ts', type: 'file', description: 'Fetch & cache instrument configs' },
             ]
           },
           {
@@ -155,6 +167,7 @@ export default function App() {
             children: [
               { name: 'api.ts', type: 'file' },
               { name: 'auth.ts', type: 'file' },
+              { name: 'instruments.ts', type: 'file', description: 'Instrument API calls' },
             ]
           },
           {
@@ -166,7 +179,11 @@ export default function App() {
           },
           { name: 'pages/', type: 'folder', description: 'Route pages' },
           { name: 'utils/', type: 'folder', description: 'Formatters, validators' },
-          { name: 'types/', type: 'folder', description: 'TypeScript interfaces' },
+          { name: 'types/', type: 'folder', description: 'TypeScript interfaces', children: [
+            { name: 'instrument.ts', type: 'file', description: 'Instrument interface (symbol, contract_size, tick_value, etc.)' },
+            { name: 'calculation.ts', type: 'file' },
+            { name: 'user.ts', type: 'file' },
+          ]},
         ]},
         { name: 'tailwind.config.ts', type: 'file' },
         { name: 'vite.config.ts', type: 'file' },
@@ -319,8 +336,10 @@ Where:
   PL_short_i = (Open_Price_i − Current_Price_i) × Volume_i × Contract_Size_i × Point_Value_i
 
 Simplified (account currency = quote currency):
-  PL_long  = (Current_Bid − Open_Price) × Lots × 100,000 × (1 / Current_Bid)
-  PL_short = (Open_Price − Current_Ask) × Lots × 100,000 × (1 / Current_Ask)`}
+  PL_long  = (Current_Bid − Open_Price) × Lots × Contract_Size × (1 / Current_Bid)
+  PL_short = (Open_Price − Current_Ask) × Lots × Contract_Size × (1 / Current_Ask)
+
+Note: Contract_Size is instrument-specific (see Instrument Configuration Table)`}
                 description="Credit represents broker bonuses, deposit bonuses, or non-withdrawable credit that acts as an equity buffer. It increases Equity without changing Balance. When Credit is fully consumed by losses, Equity drops to Balance level."
                 variant="success"
               />
@@ -359,6 +378,85 @@ Simplified (account currency = quote currency):
                     <div className="mt-2 text-cyan-400">→ Equity is the dynamic numerator</div>
                     <div className="text-cyan-400">  in the ML% formula</div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Instrument Configuration Table */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-purple-600/30 flex items-center justify-center text-purple-400 text-sm font-bold">★</span>
+                Instrument Configuration (Contract Sizes)
+              </h3>
+              <div className="bg-slate-800/30 border border-purple-500/30 rounded-xl p-6">
+                <p className="text-sm text-slate-400 mb-4">
+                  Contract size is <strong className="text-white">instrument-specific</strong> and must be looked up from a configuration table. 
+                  The app supports any instrument by referencing this table at calculation time.
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-700">
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">Instrument</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">Category</th>
+                        <th className="text-right py-2 px-3 text-slate-400 font-medium">Contract Size</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">Unit</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">Tick Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="font-mono text-xs">
+                      <tr className="border-b border-slate-800">
+                        <td className="py-2 px-3 text-cyan-400">EURUSD, GBPUSD, etc.</td>
+                        <td className="py-2 px-3 text-slate-400">Forex</td>
+                        <td className="py-2 px-3 text-right text-white">100,000</td>
+                        <td className="py-2 px-3 text-slate-400">units</td>
+                        <td className="py-2 px-3 text-slate-400">$10/pip (std lot)</td>
+                      </tr>
+                      <tr className="border-b border-slate-800">
+                        <td className="py-2 px-3 text-amber-400">XAUUSD</td>
+                        <td className="py-2 px-3 text-slate-400">Metals</td>
+                        <td className="py-2 px-3 text-right text-white">100</td>
+                        <td className="py-2 px-3 text-slate-400">oz</td>
+                        <td className="py-2 px-3 text-slate-400">$100/point (1 oz = $1)</td>
+                      </tr>
+                      <tr className="border-b border-slate-800">
+                        <td className="py-2 px-3 text-slate-300">XAGUSD</td>
+                        <td className="py-2 px-3 text-slate-400">Metals</td>
+                        <td className="py-2 px-3 text-right text-white">5,000</td>
+                        <td className="py-2 px-3 text-slate-400">oz</td>
+                        <td className="py-2 px-3 text-slate-400">$5,000/point</td>
+                      </tr>
+                      <tr className="border-b border-slate-800">
+                        <td className="py-2 px-3 text-emerald-400">NDX, DJ30, SPX500</td>
+                        <td className="py-2 px-3 text-slate-400">Indices</td>
+                        <td className="py-2 px-3 text-right text-white">1</td>
+                        <td className="py-2 px-3 text-slate-400">contract</td>
+                        <td className="py-2 px-3 text-slate-400">varies by index</td>
+                      </tr>
+                      <tr className="border-b border-slate-800">
+                        <td className="py-2 px-3 text-purple-400">BTCUSD</td>
+                        <td className="py-2 px-3 text-slate-400">Crypto</td>
+                        <td className="py-2 px-3 text-right text-white">1</td>
+                        <td className="py-2 px-3 text-slate-400">BTC</td>
+                        <td className="py-2 px-3 text-slate-400">$1/point</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 px-3 text-blue-400">USOil, UKOil</td>
+                        <td className="py-2 px-3 text-slate-400">Commodities</td>
+                        <td className="py-2 px-3 text-right text-white">1,000</td>
+                        <td className="py-2 px-3 text-slate-400">barrels</td>
+                        <td className="py-2 px-3 text-slate-400">$1,000/point</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4 bg-black/30 rounded-lg p-3 font-mono text-xs text-slate-400">
+                  <div className="text-purple-400 mb-1">// Backend lookup:</div>
+                  <div>instrument = db.query(Instrument).filter_by(symbol=symbol).first()</div>
+                  <div>contract_size = instrument.contract_size  <span className="text-slate-600"># e.g., 100 for XAUUSD</span></div>
+                  <div>tick_value = instrument.tick_value</div>
+                  <div>tick_size = instrument.tick_size</div>
+                  <div className="mt-2 text-cyan-400">// Used in ALL formulas: PL = ΔPrice × Lots × Contract_Size × (TickValue/TickSize)</div>
                 </div>
               </div>
             </div>
@@ -447,33 +545,49 @@ Additional deposit needed:
               <h3 className="text-lg font-semibold text-white mb-6">Formula Relationship Diagram</h3>
               <div className="font-mono text-sm text-slate-300 bg-black/40 rounded-xl p-6 overflow-x-auto">
                 <pre className="whitespace-pre">{`
-┌─────────────────────────────────────────────────────────────────────┐
-│                        MARGIN LEVEL SYSTEM                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   Balance ──────┐                                                   │
-│                 │                                                   │
-│   Credit ───────┼──→ Equity ──→ ML% = (Equity / Margin) × 100     │
-│                 │       │                    │                       │
-│   Floating PL ──┘       │                    │                       │
-│   (Long + Short)        │              ┌─────┴──────┐               │
-│                         │              │            │               │
-│                         │         ML% = 100%   ML% < StopOut%      │
-│                         │              │            │               │
-│                         │         LIQUIDATION   FORCE CLOSE         │
-│                         │         PRICE calc    (largest loss       │
-│                         │                        first)             │
-│                         │                                           │
-│   Used_Margin ──────────┘                                           │
-│   (fixed at entry)                                                  │
-│                                                                     │
-│   REVERSE CALCULATIONS:                                             │
-│   ┌──────────────────────────────────────────────────────┐          │
-│   │ P_liq    = f(Balance, Credit, Margin, Positions)     │          │
-│   │ Bal_req  = f(Margin, Credit, P_target, Positions)    │          │
-│   └──────────────────────────────────────────────────────┘          │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        MARGIN LEVEL SYSTEM                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Balance ──────┐                                                       │
+│                 │                                                       │
+│   Credit ───────┼──→ Equity ──→ ML% = (Equity / Margin) × 100         │
+│                 │       │                    │                           │
+│   Floating PL ──┘       │                    │                           │
+│   (Long + Short)        │              ┌─────┴──────┐                   │
+│        ↑                │              │            │                   │
+│        │                │         ML% = 100%   ML% < StopOut%          │
+│   ┌────┴────────┐       │              │            │                   │
+│   │ PL = ΔPrice │       │         LIQUIDATION   FORCE CLOSE            │
+│   │ × Lots ×    │       │         PRICE calc    (largest loss          │
+│   │ ContractSz  │       │                        first)                │
+│   │ × TickVal/  │       │                                              │
+│   │   TickSize  │       │                                              │
+│   └────┬────────┘       │                                              │
+│        │                │                                              │
+│   ┌────▼───────────────────────┐                                       │
+│   │  INSTRUMENT CONFIG TABLE   │  ← DB lookup per symbol              │
+│   │  ┌──────────┬──────────┐   │                                       │
+│   │  │ EURUSD   │ 100,000  │   │  (Forex)                             │
+│   │  │ XAUUSD   │ 100      │   │  (Gold, oz)                          │
+│   │  │ XAGUSD   │ 5,000    │   │  (Silver, oz)                        │
+│   │  │ NDX      │ 1        │   │  (Indices)                           │
+│   │  │ BTCUSD   │ 1        │   │  (Crypto)                            │
+│   │  └──────────┴──────────┘   │                                       │
+│   └────────────────────────────┘                                       │
+│                                                                         │
+│   Used_Margin ──────────────────┘                                       │
+│   (fixed at entry)                                                      │
+│                                                                         │
+│   REVERSE CALCULATIONS:                                                 │
+│   ┌──────────────────────────────────────────────────────────┐          │
+│   │ P_liq    = f(Balance, Credit, Margin, Positions,         │          │
+│   │               ContractSize[instrument])                  │          │
+│   │ Bal_req  = f(Margin, Credit, P_target, Positions,        │          │
+│   │               ContractSize[instrument])                  │          │
+│   └──────────────────────────────────────────────────────────┘          │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 `}</pre>
               </div>
             </div>
@@ -838,6 +952,63 @@ services:
 volumes:
   pgdata:`}</pre>
               </div>
+            </div>
+
+            {/* Instrument Seed Data */}
+            <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-8">
+              <h3 className="text-lg font-semibold text-white mb-4">📊 seeds/instruments.json (Default Contract Sizes)</h3>
+              <div className="bg-black/40 rounded-xl p-5 font-mono text-xs overflow-x-auto">
+                <pre className="whitespace-pre text-slate-300">{`[
+  {
+    "symbol": "EURUSD",
+    "category": "forex",
+    "contract_size": 100000,
+    "tick_size": 0.00001,
+    "tick_value": 1.00,
+    "margin_currency": "USD",
+    "description": "Euro / US Dollar"
+  },
+  {
+    "symbol": "XAUUSD",
+    "category": "metals",
+    "contract_size": 100,
+    "tick_size": 0.01,
+    "tick_value": 1.00,
+    "margin_currency": "USD",
+    "description": "Gold (100 oz per lot)"
+  },
+  {
+    "symbol": "XAGUSD",
+    "category": "metals",
+    "contract_size": 5000,
+    "tick_size": 0.001,
+    "tick_value": 5.00,
+    "margin_currency": "USD",
+    "description": "Silver (5000 oz per lot)"
+  },
+  {
+    "symbol": "NDX",
+    "category": "indices",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.20,
+    "margin_currency": "USD",
+    "description": "Nasdaq 100"
+  },
+  {
+    "symbol": "BTCUSD",
+    "category": "crypto",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.01,
+    "margin_currency": "USD",
+    "description": "Bitcoin / US Dollar"
+  }
+]`}</pre>
+              </div>
+              <p className="text-xs text-slate-500 mt-3">
+                Admins can add/edit instruments via the Admin panel. The seed file provides defaults on first deploy.
+              </p>
             </div>
 
             {/* Branding Config */}
