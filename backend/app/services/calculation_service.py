@@ -110,18 +110,29 @@ class CalculationService:
         """
         Calculate floating P/L for a single position.
 
-        PL_long  = (Current_Price − Open_Price) × Volume × Contract_Size × Point_Value
-        PL_short = (Open_Price − Current_Price) × Volume × Contract_Size × Point_Value
+        Universal MT5 formula:
+          PL = (ΔPrice / Tick_Size) × Tick_Value × Volume
+          PL = ΔPrice × Volume × Point_Value
 
-        Point_Value = Tick_Value / Tick_Size
+        Where Point_Value = Tick_Value / Tick_Size
+
+        For LONG:  PL = (Current_Price − Open_Price) × Volume × Point_Value
+        For SHORT: PL = (Open_Price − Current_Price) × Volume × Point_Value
+
+        Examples:
+          EURUSD: Point_Value = 1.0 / 0.00001 = 100,000
+            25-pip move (0.0025) on 1 lot = 0.0025 × 1.0 × 100,000 = $250 ✓
+
+          XAUUSD: Point_Value = 1.0 / 0.01 = 100
+            $10 move on 1 lot = 10 × 1.0 × 100 = $1,000 ✓
         """
         current_price = price if price is not None else position.price
         price_diff = current_price - position.open_price
 
         if position.type.lower() == "buy":
-            pl = price_diff * position.volume * instrument.contract_size * instrument.point_value
+            pl = price_diff * position.volume * instrument.point_value
         else:  # sell
-            pl = -price_diff * position.volume * instrument.contract_size * instrument.point_value
+            pl = -price_diff * position.volume * instrument.point_value
 
         return pl
 
@@ -262,14 +273,15 @@ class CalculationService:
             inst = instruments[sym]
 
             # Calculate net directional exposure
-            # For each position: dir × Volume × Contract_Size × Point_Value
+            # For each position: dir × Volume × Point_Value
+            # (Point_Value = Tick_Value / Tick_Size, universal for all instruments)
             total_exposure = 0.0
             weighted_open = 0.0
             current_pl_sym = 0.0
 
             for pos in sym_positions:
                 direction = 1.0 if pos.type.lower() == "buy" else -1.0
-                exposure = direction * pos.volume * inst.contract_size * inst.point_value
+                exposure = direction * pos.volume * inst.point_value
                 total_exposure += exposure
                 weighted_open += exposure * pos.open_price
                 current_pl_sym += self.calculate_floating_pl(pos, inst)
