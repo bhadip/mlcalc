@@ -1,0 +1,81 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# MLCalc — Docker Compose
+# Services: app (FastAPI + static frontend), db (PostgreSQL), cloudflared (tunnel)
+# ──────────────────────────────────────────────────────────────────────────────
+
+version: '3.8'
+
+services:
+  # ─── Application ──────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mlcalc-app
+    restart: unless-stopped
+    ports:
+      - "8504:8504"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-mlcalc}:${DB_PASSWORD:-mlcalc}@db:5432/${DB_NAME:-mlcalc}
+      - DATABASE_URL_SYNC=postgresql://${DB_USER:-mlcalc}:${DB_PASSWORD:-mlcalc}@db:5432/${DB_NAME:-mlcalc}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:-change-me-jwt-secret}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://mlcalc.prasanti.com/api/v1/auth/google/callback}
+      - MS_CLIENT_ID=${MS_CLIENT_ID:-}
+      - MS_CLIENT_SECRET=${MS_CLIENT_SECRET:-}
+      - MS_REDIRECT_URI=${MS_REDIRECT_URI:-https://mlcalc.prasanti.com/api/v1/auth/microsoft/callback}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://mlcalc.prasanti.com,http://localhost:3000}
+      - OCR_ENGINE=${OCR_ENGINE:-easyocr}
+      - OCR_GPU=false
+      - DEBUG=${DEBUG:-false}
+    volumes:
+      - screenshot_uploads:/app/uploads/screenshots
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mlcalc-network
+
+  # ─── PostgreSQL ───────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: mlcalc-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-mlcalc}
+      - POSTGRES_USER=${DB_USER:-mlcalc}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-mlcalc}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mlcalc} -d ${DB_NAME:-mlcalc}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mlcalc-network
+
+  # ─── Cloudflare Tunnel ────────────────────────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: mlcalc-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - app
+    networks:
+      - mlcalc-network
+
+volumes:
+  postgres_data:
+    driver: local
+  screenshot_uploads:
+    driver: local
+
+networks:
+  mlcalc-network:
+    driver: bridge

@@ -1,0 +1,134 @@
+[
+  {
+    "symbol": "EURUSD",
+    "name": "Euro / US Dollar",
+    "category": "forex",
+    "contract_size": 100000,
+    "tick_size": 0.00001,
+    "tick_value": 1.00,
+    "margin_currency": "USD",
+    "leverage": 100,
+    "description": "Standard forex pair. 1 lot = 100,000 units."
+  },
+  {
+    "symbol": "GBPUSD",
+    "name": "British Pound / US Dollar",
+    "category": "forex",
+    "contract_size": 100000,
+    "tick_size": 0.00001,
+    "tick_value": 1.00,
+    "margin_currency": "USD",
+    "leverage": 100,
+    "description": "Standard forex pair. 1 lot = 100,000 units."
+  },
+  {
+    "symbol": "USDJPY",
+    "name": "US Dollar / Japanese Yen",
+    "category": "forex",
+    "contract_size": 100000,
+    "tick_size": 0.001,
+    "tick_value": 1.00,
+    "margin_currency": "USD",
+    "leverage": 100,
+    "description": "Yen pair. Tick size is 0.001 (1 pip = 10 ticks)."
+  },
+  {
+    "symbol": "XAUUSD",
+    "name": "Gold Spot / US Dollar",
+    "category": "metals",
+    "contract_size": 100,
+    "tick_size": 0.01,
+    "tick_value": 1.00,
+    "margin_currency": "USD",
+    "leverage": 100,
+    "description": "Gold. 1 lot = 100 oz. $1 move = $100 P/L per lot."
+  },
+  {
+    "symbol": "XAGUSD",
+    "name": "Silver Spot / US Dollar",
+    "category": "metals",
+    "contract_size": 5000,
+    "tick_size": 0.001,
+    "tick_value": 5.00,
+    "margin_currency": "USD",
+    "leverage": 100,
+    "description": "Silver. 1 lot = 5,000 oz. $0.01 move = $50 P/L per lot."
+  },
+  {
+    "symbol": "NDX",
+    "name": "Nasdaq 100",
+    "category": "indices",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.20,
+    "margin_currency": "USD",
+    "leverage": 50,
+    "description": "Nasdaq 100 index CFD. 1 lot = 1 contract."
+  },
+  {
+    "symbol": "DJ30",
+    "name": "Dow Jones 30",
+    "category": "indices",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.10,
+    "margin_currency": "USD",
+    "leverage": 50,
+    "description": "Dow Jones Industrial Average CFD."
+  },
+  {
+    "symbol": "SPX500",
+    "name": "S&P 500",
+    "category": "indices",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.10,
+    "margin_currency": "USD",
+    "leverage": 50,
+    "description": "S&P 500 index CFD."
+  },
+  {
+    "symbol": "BTCUSD",
+    "name": "Bitcoin / US Dollar",
+    "category": "crypto",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.01,
+    "margin_currency": "USD",
+    "leverage": 10,
+    "description": "Bitcoin CFD. 1 lot = 1 BTC."
+  },
+  {
+    "symbol": "ETHUSD",
+    "name": "Ethereum / US Dollar",
+    "category": "crypto",
+    "contract_size": 1,
+    "tick_size": 0.01,
+    "tick_value": 0.01,
+    "margin_currency": "USD",
+    "leverage": 10,
+    "description": "Ethereum CFD. 1 lot = 1 ETH."
+  },
+  {
+    "symbol": "USOIL",
+    "name": "US Crude Oil (WTI)",
+    "category": "commodities",
+    "contract_size": 1000,
+    "tick_size": 0.01,
+    "tick_value": 10.00,
+    "margin_currency": "USD",
+    "leverage": 20,
+    "description": "WTI Crude Oil. 1 lot = 1,000 barrels."
+  },
+  {
+    "symbol": "UKOIL",
+    "name": "UK Brent Oil",
+    "category": "commodities",
+    "contract_size": 1000,
+    "tick_size": 0.01,
+    "tick_value": 10.00,
+    "margin_currency": "USD",
+    "leverage": 20,
+    "description": "Brent Crude Oil. 1 lot = 1,000 barrels."
+  }
+]

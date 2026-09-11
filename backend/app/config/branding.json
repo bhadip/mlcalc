@@ -1,0 +1,26 @@
+{
+  "app_name": "MLCalc",
+  "tagline": "Margin Level Calculator",
+  "logo": {
+    "light": "/branding/logo-light.svg",
+    "dark": "/branding/logo-dark.svg"
+  },
+  "colors": {
+    "primary": "#06b6d4",
+    "secondary": "#3b82f6",
+    "accent": "#f59e0b",
+    "danger": "#ef4444",
+    "success": "#10b981"
+  },
+  "features": {
+    "ocr_enabled": true,
+    "auth_required_for_save": true,
+    "visitor_calc_limit": 10,
+    "show_audit_log": false
+  },
+  "broker_defaults": {
+    "stop_out_percent": 50,
+    "margin_call_percent": 100,
+    "default_leverage": 100
+  }
+}
