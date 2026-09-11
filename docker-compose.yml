@@ -57,18 +57,18 @@ services:
     networks:
       - mlcalc-network
 
-  # ─── Cloudflare Tunnel ────────────────────────────────────────────────────
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: mlcalc-cloudflared
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-    depends_on:
-      - app
-    networks:
-      - mlcalc-network
+  # ─── Cloudflare Tunnel (commented out for local testing) ──────────────────
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: mlcalc-cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run
+  #   environment:
+  #     - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - mlcalc-network
 
 volumes:
   postgres_data:

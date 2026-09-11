@@ -4,6 +4,7 @@ Public read access; write access requires ADMIN role.
 """
 
 import uuid
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/instruments", tags=["Instruments"])
 
 # ─── Public Read ───────────────────────────────────────────────────────────────
 
-@router.get("/", response_model=list[InstrumentResponse])
+@router.get("/", response_model=List[InstrumentResponse])
 async def list_instruments(
     category: str = Query(None),
     active_only: bool = Query(True),
