@@ -6,6 +6,7 @@ If Balance == Equity, returns is_stopped_out=True to lock the UI.
 """
 
 import uuid
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
@@ -184,7 +185,7 @@ async def calculate_balance_adjustment(
 
 # ─── Simulation History ────────────────────────────────────────────────────────
 
-@router.get("/history", response_model=list[SimulationHistoryResponse])
+@router.get("/history", response_model=List[SimulationHistoryResponse])
 async def get_simulation_history(
     sim_type: str = Query(None, description="Filter by simulation type"),
     limit: int = Query(50, ge=1, le=200),

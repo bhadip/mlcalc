@@ -4,6 +4,7 @@ Requires ADMIN role.
 """
 
 import uuid
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # ─── User Management ───────────────────────────────────────────────────────────
 
-@router.get("/users", response_model=list[UserAdminResponse])
+@router.get("/users", response_model=List[UserAdminResponse])
 async def list_users(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
