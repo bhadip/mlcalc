@@ -61,7 +61,7 @@ async def get_approved_user(
     return user
 
 
-async def require_role(minimum_role: UserRole):
+def require_role(minimum_role: UserRole):
     """Dependency factory: require a minimum role level."""
     role_hierarchy = {
         UserRole.VISITOR: 0,

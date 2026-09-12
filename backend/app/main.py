@@ -91,3 +91,22 @@ async def root():
         "docs": "/api/docs",
         "health": "/api/health",
     }
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+import os
+
+# Serve the React frontend built by Docker
+static_dir = "/app/static" # This matches the destination in your Dockerfile
+if os.path.exists(static_dir):
+    # Mount the static assets (JS/CSS files)
+    app.mount("/assets", StaticFiles(directory=static_dir), name="static")
+
+    # Serve the main index.html at the root URL
+    @app.get("/", response_class=HTMLResponse)
+    async def serve_frontend():
+        index_path = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_path):
+            with open(index_path, "r") as f:
+                return f.read()
+        return HTMLResponse(content="<h1>Frontend not found. Please rebuild Docker.</h1>", status_code=404)
