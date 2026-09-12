@@ -6,10 +6,13 @@ Margin Level Calculator backend with OCR, OAuth, and simulation capabilities.
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 
 from app.api.v1.router import router as v1_router
 from app.config import settings
@@ -82,12 +85,44 @@ async def health_check():
     }
 
 
-@app.get("/")
-async def root():
-    """Root endpoint — API info."""
-    return {
-        "name": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "docs": "/api/docs",
-        "health": "/api/health",
-    }
+# ─── Static Files (Frontend) ───────────────────────────────────────────────────
+
+# Mount static files AFTER all API routes
+static_dir = Path("/app/static")
+if static_dir.exists():
+    app.mount("/assets", StaticFiles(directory=static_dir / "assets"), name="static-assets")
+    
+    # Catch-all route for SPA - serves index.html for all non-API routes
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve the React SPA for all non-API routes."""
+        # If requesting a static file that exists, serve it
+        file_path = static_dir / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        
+        # Otherwise, serve index.html for client-side routing
+        index_path = static_dir / "index.html"
+        if index_path.exists():
+            return FileResponse(index_path)
+        
+        # Fallback to API info if frontend not built
+        return {
+            "name": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+            "docs": "/api/docs",
+            "health": "/api/health",
+            "message": "Frontend not available. API is running.",
+        }
+else:
+    # Fallback if static directory doesn't exist (development mode)
+    @app.get("/")
+    async def root():
+        """Root endpoint — API info."""
+        return {
+            "name": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+            "docs": "/api/docs",
+            "health": "/api/health",
+            "message": "Frontend not built. Run 'npm run build' in frontend/ directory.",
+        }
