@@ -82,7 +82,8 @@ export default function Calculator() {
     } finally {
       setLoading(false);
     }
-  }, [accountData, currentPrice, isStoppedOut]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountData.balance, accountData.credit, accountData.margin, accountData.positions.length, currentPrice, isStoppedOut]);
 
   // Calculate balance adjustment
   const calculateBalanceAdjustment = useCallback(async () => {
@@ -117,15 +118,17 @@ export default function Calculator() {
     } finally {
       setLoading(false);
     }
-  }, [accountData, currentPrice, balanceAdjustment, isStoppedOut]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountData.balance, accountData.credit, accountData.margin, accountData.positions.length, currentPrice, balanceAdjustment, isStoppedOut]);
 
-  // Auto-calculate on data change
+  // Auto-calculate on slider changes only (not on function reference changes)
   useEffect(() => {
     if (accountData.positions.length > 0 && !isStoppedOut) {
       calculateLiquidation();
       calculateBalanceAdjustment();
     }
-  }, [currentPrice, balanceAdjustment, calculateLiquidation, calculateBalanceAdjustment, accountData.positions.length, isStoppedOut]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPrice, balanceAdjustment]);
 
   // Handle screenshot upload
   const handleScreenshotUpload = (data: any) => {
