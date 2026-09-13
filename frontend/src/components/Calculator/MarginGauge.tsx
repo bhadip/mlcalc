@@ -33,7 +33,9 @@ export default function MarginGauge({ marginLevel, isStoppedOut }: MarginGaugePr
   };
 
   // Calculate gauge width (logarithmic scale for better visualization)
-  const gaugeWidth = Math.min(Math.max((Math.log10(Math.max(marginLevel, 1)) / Math.log10(1000)) * 100, 0), 100);
+  // Guard against NaN/Infinity
+  const safeMarginLevel = Number.isFinite(marginLevel) && marginLevel > 0 ? marginLevel : 0;
+  const gaugeWidth = Math.min(Math.max((Math.log10(Math.max(safeMarginLevel, 1)) / Math.log10(1000)) * 100, 0), 100);
 
   return (
     <div className="bg-slate-800 rounded-xl p-6 shadow-2xl border border-slate-700">
@@ -46,7 +48,7 @@ export default function MarginGauge({ marginLevel, isStoppedOut }: MarginGaugePr
 
       <div className="mb-4">
         <div className={`text-5xl font-bold ${getTextColor()} font-mono`}>
-          {marginLevel.toFixed(2)}%
+          {Number.isFinite(marginLevel) ? marginLevel.toFixed(2) : '0.00'}%
         </div>
       </div>
 

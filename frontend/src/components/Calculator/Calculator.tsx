@@ -2,7 +2,7 @@
  * Calculator — Main interactive calculator with sliders and risk simulation.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ScreenshotUpload from '../ScreenshotUpload/ScreenshotUpload';
 import MarginGauge from './MarginGauge';
 import StopOutAlert from './StopOutAlert';
@@ -43,6 +43,7 @@ export default function Calculator() {
   const [isStoppedOut, setIsStoppedOut] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isInitialMount = useRef(true);
 
   // Check for STOPPED OUT condition
   useEffect(() => {
@@ -123,6 +124,12 @@ export default function Calculator() {
 
   // Auto-calculate on slider changes only (not on function reference changes)
   useEffect(() => {
+    // Skip initial mount to prevent render storm
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     if (accountData.positions.length > 0 && !isStoppedOut) {
       calculateLiquidation();
       calculateBalanceAdjustment();
@@ -131,7 +138,7 @@ export default function Calculator() {
   }, [currentPrice, balanceAdjustment]);
 
   // Handle screenshot upload
-  const handleScreenshotUpload = (data: any) => {
+  const handleScreenshotUpload = useCallback((data: any) => {
     if (data.extracted_data) {
       const extracted = data.extracted_data;
       setAccountData({
@@ -146,7 +153,7 @@ export default function Calculator() {
         setCurrentPrice(extracted.positions[0].current_price || extracted.positions[0].open_price);
       }
     }
-  };
+  }, []);
 
   // Handle manual entry
   const handleManualEntry = (data: AccountData) => {
