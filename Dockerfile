@@ -14,7 +14,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci --production=false
 
 # Copy source and build config files
-COPY tsconfig.json vite.config.js ./
+COPY tsconfig*.json vite.config.js ./
 COPY src ./src
 COPY index.html ./
 RUN npm run build
