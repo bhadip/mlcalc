@@ -1,21 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  body {
-	background-color: #020617;
-  }
+/* Basic global resets - NO @apply directives to avoid Tailwind v4 errors */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background-color: #020617; /* slate-950 */
+  color: white;
 }
 
-@layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors;
-  }
-  .btn-danger {
-    @apply px-4 py-2 bg-danger-600 hover:bg-danger-700 text-white rounded-lg font-medium transition-colors;
-  }
-  .card {
-    @apply bg-slate-800/50 border border-slate-700/50 rounded-xl p-6;
-  }
+#root {
+  height: 100%;
+  width: 100%;
 }
