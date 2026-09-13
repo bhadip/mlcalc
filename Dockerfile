@@ -10,13 +10,13 @@ FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Install dependencies
-COPY frontend/package.json frontend/package-lock.json* ./
+COPY package.json package-lock.json* ./
 RUN npm ci --production=false
 
 # Copy source and build config files
-COPY frontend/tsconfig*.json frontend/vite.config.ts frontend/postcss.config.js frontend/tailwind.config.js ./
-COPY frontend/src ./src
-COPY frontend/index.html ./
+COPY tsconfig*.json vite.config.js ./
+COPY src ./src
+COPY index.html ./
 RUN npm run build
 
 # ─── Stage 2: Python Backend ──────────────────────────────────────────────────
@@ -24,7 +24,7 @@ FROM python:3.12-slim AS production
 
 # System dependencies for OCR and image processing
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     tesseract-ocr \
     tesseract-ocr-eng \
