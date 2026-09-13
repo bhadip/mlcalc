@@ -13,8 +13,10 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci --production=false
 
-# Copy source and build
-COPY frontend/ ./
+# Copy source and build config files
+COPY frontend/tsconfig*.json frontend/vite.config.ts frontend/postcss.config.js frontend/tailwind.config.js ./
+COPY frontend/src ./src
+COPY frontend/index.html ./
 RUN npm run build
 
 # ─── Stage 2: Python Backend ──────────────────────────────────────────────────
