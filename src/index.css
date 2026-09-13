@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/* Basic global resets - NO @apply directives to avoid Tailwind v4 errors */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background-color: #020617; /* slate-950 */
+  color: white;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
